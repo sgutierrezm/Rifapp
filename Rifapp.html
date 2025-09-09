@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RiffleRAZACampamento2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+        :root {
+            --color-pagado: #B22222;
+            --color-apartado: #FFC0CB;
+            --color-pendiente: #FFA500;
+            --color-vacio: #e0e0e0;
+            --color-vacio-texto: #1a1a1a;
+            --color-background-dark: #1A1A1A;
+            --color-text-light: #E0E0E0;
+            --color-main: #8A2BE2; /* Morado */
+            --color-accent-orange: #FFA500; /* Naranja */
+            --color-accent-green: #008000; /* Verde */
+            --color-modal-bg: rgba(0, 0, 0, 0.7);
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--color-background-dark);
+            color: var(--color-text-light);
+            transition: background-color 0.3s ease;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 2rem;
+        }
+        .boleta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 0.5rem;
+            max-width: 800px;
+            margin: auto;
+        }
+        .boleta {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+        .boleta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .boleta.vacio {
+            background-color: var(--color-vacio);
+            color: var(--color-vacio-texto);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .boleta.vacio:hover {
+            background-color: var(--color-text-light);
+        }
+        .boleta.pagado { background-color: var(--color-pagado); }
+        .boleta.apartado { background-color: var(--color-apartado); }
+        .boleta.pendiente { background-color: var(--color-pendiente); }
+        .boleta-text {
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            font-size: 1.25rem;
+        }
+        /* Dashboard styles */
+        .admin-controls {
+            display: none;
+        }
+        .password-prompt {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--color-modal-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background-color: var(--color-background-dark);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            max-width: 400px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .button-primary {
+            background-color: var(--color-main);
+            color: white;
+        }
+        .button-primary:hover {
+            background-color: #6a18b8;
+        }
+        .button-secondary {
+            background-color: var(--color-text-light);
+            color: var(--color-background-dark);
+        }
+        .button-secondary:hover {
+            background-color: #c9c9c9;
+        }
+        input, select, textarea {
+            background-color: #2c2c2c;
+            border: 1px solid #444;
+            color: var(--color-text-light);
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+        .status-options button {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .status-options .vacio { background-color: var(--color-vacio); color: var(--color-vacio-texto); }
+        .status-options .vacio:hover { background-color: #c0c0c0; }
+        .status-options .apartado { background-color: var(--color-apartado); }
+        .status-options .apartado:hover { background-color: #d4a5b0; }
+        .status-options .pendiente { background-color: var(--color-pendiente); }
+        .status-options .pendiente:hover { background-color: #d49500; }
+        .status-options .pagado { background-color: var(--color-pagado); }
+        .status-options .pagado:hover { background-color: #9c1e1e; }
+        .modal-admin-content {
+            background-color: var(--color-background-dark);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            max-width: 600px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: relative;
+        }
+        .modal-admin-content .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--color-text-light);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center p-4">
+
+    <!-- Landing Page (Default) -->
+    <div id="mainContent" class="container text-center py-8">
+        <h1 class="text-4xl sm:text-5xl font-bold mb-4">RiffleRAZACampamento2025</h1>
+        <p class="text-lg sm:text-xl font-light mb-8">¡Gana un premio increíble! Asegura tu boleta ahora.</p>
+
+        <!-- Countdown Timer -->
+        <div id="countdown" class="text-3xl sm:text-4xl font-bold mb-8"></div>
+        
+        <!-- Grid de Boletas -->
+        <div class="boleta-grid my-8" id="lotteryGrid"></div>
+
+        <!-- Botones de Acción -->
+        <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 mt-8">
+            <button id="downloadImageBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                Descargar Imagen
+            </button>
+            <button id="toggleAdminBtn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                Modo Administración
+            </button>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard (Initially hidden) -->
+    <div id="adminControlsContainer" class="container admin-controls text-center py-8 mt-8 border-t-2 border-gray-700 pt-8">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">Panel de Administración</h2>
+        <div id="adminControls" class="mb-8 p-6 bg-gray-800 rounded-xl shadow-lg">
+            <h3 class="text-2xl font-bold mb-4">Configuración de la Rifa</h3>
+            <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <div>
+                    <label for="costoInput" class="block text-sm font-medium mb-1">Costo de Boleta:</label>
+                    <input type="number" id="costoInput" class="w-24 text-center">
+                </div>
+                <div>
+                    <label for="fechaFinalInput" class="block text-sm font-medium mb-1">Fecha Final (yyyy-mm-dd):</label>
+                    <input type="date" id="fechaFinalInput" class="w-auto">
+                </div>
+                <button id="saveChangesBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg">Guardar Cambios</button>
+            </div>
+        </div>
+        <div id="adminLotteryGrid" class="boleta-grid my-8"></div>
+    </div>
+
+    <!-- Modal para solicitar boleta -->
+    <div id="requestModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-sm shadow-2xl relative">
+            <button onclick="hideRequestModal()" class="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+            <h3 class="text-2xl font-bold mb-4 text-center">Solicitar Boleta #<span id="modalBoletaNumber"></span></h3>
+            <p id="modalBoletaMessage" class="text-center text-sm mb-4"></p>
+            <div class="space-y-4">
+                <input type="text" id="solicitanteNombre" placeholder="Tu nombre" class="w-full bg-gray-700 rounded-lg border-none p-3 placeholder-gray-400">
+                <input type="tel" id="solicitanteWhatsapp" placeholder="Número de WhatsApp" class="w-full bg-gray-700 rounded-lg border-none p-3 placeholder-gray-400">
+                <button onclick="sendRequest()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition-colors">
+                    Solicitar
+                </button>
+            </div>
+            <p id="requestStatus" class="mt-4 text-center text-sm"></p>
+        </div>
+    </div>
+    
+    <!-- Modal de contraseña de administrador -->
+    <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center p-4 z-50">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold mb-4 text-center">Acceso de Administrador</h3>
+            <input type="password" id="adminPasswordInput" placeholder="Ingresa la contraseña" class="w-full bg-gray-700 rounded-lg border-none p-3 placeholder-gray-400">
+            <p id="passwordError" class="text-red-400 text-sm text-center hidden">Contraseña incorrecta. Intenta de nuevo.</p>
+            <button id="submitPasswordBtn" class="button button-primary">
+                Ingresar
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de edicion de boleta (Admin) -->
+    <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center p-4">
+        <div class="modal-admin-content">
+            <button class="close-button" onclick="hideAdminModal()">&times;</button>
+            <h3 class="text-2xl font-bold mb-4">Editar Boleta #<span id="adminModalBoletaNumber"></span></h3>
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div class="flex flex-col">
+                    <label for="adminNombre">Nombre del Comprador:</label>
+                    <input type="text" id="adminNombre" class="mt-1">
+                </div>
+                <div class="flex flex-col">
+                    <label for="adminTelefono">Teléfono:</label>
+                    <input type="tel" id="adminTelefono" class="mt-1">
+                </div>
+                <div class="flex flex-col">
+                    <label for="adminMontoPagado">Monto Pagado:</label>
+                    <input type="number" id="adminMontoPagado" class="mt-1">
+                </div>
+                <div class="flex flex-col">
+                    <label for="adminMontoTotal">Costo Total:</label>
+                    <input type="number" id="adminMontoTotal" class="mt-1">
+                </div>
+            </div>
+            <div class="status-options flex flex-wrap gap-2 justify-center">
+                <button onclick="changeStatus('vacio')" class="vacio">Vacío</button>
+                <button onclick="changeStatus('apartado')" class="apartado">Apartado</button>
+                <button onclick="changeStatus('pendiente')" class="pendiente">Pendiente</button>
+                <button onclick="changeStatus('pagado')" class="pagado">Pagado</button>
+            </div>
+            <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <button id="sendWhatsappBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors hidden">
+                    Enviar Comprobante por WhatsApp
+                </button>
+                <button onclick="deleteBoletaData()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    Eliminar Datos
+                </button>
+            </div>
+            <p id="adminStatus" class="mt-4 text-center text-sm"></p>
+        </div>
+    </div>
+
+    <!-- Modal para mostrar mensajes -->
+    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-sm shadow-2xl relative">
+            <h3 id="messageTitle" class="text-2xl font-bold mb-4 text-center"></h3>
+            <p id="messageContent" class="text-center mb-4"></p>
+            <div class="flex justify-center">
+                <button onclick="hideMessageModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    Aceptar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        // Global variables for Firebase
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db;
+        let auth;
+        let userId;
+        let boletas = [];
+        let raffleSettings = {
+            costo: 500,
+            fechaFinal: "2025-12-31"
+        };
+        let selectedBoletaNumber = null;
+        
+        // Admin password and WhatsApp number
+        const adminPassword = "12430628";
+        const adminWhatsappNumber = "+573104861257";
+
+        // Message Modal Functions
+        function showMessageModal(title, content) {
+            document.getElementById('messageTitle').innerText = title;
+            document.getElementById('messageContent').innerText = content;
+            document.getElementById('messageModal').style.display = 'flex';
+        }
+
+        function hideMessageModal() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+
+        // Initialize Firebase
+        async function initializeFirebase() {
+            try {
+                const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+                const { getFirestore, doc, setDoc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const { getAuth, signInWithCustomToken, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                
+                // Firestore Listeners
+                const settingsRef = doc(db, `artifacts/${appId}/users/${userId}/raffle_settings/raffle_details`);
+                const boletasRef = doc(db, `artifacts/${appId}/public/data/raffle_boletas/all_numbers`);
+
+                onSnapshot(settingsRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        raffleSettings = docSnap.data();
+                        updateRaffleSettingsUI();
+                    } else {
+                        setDoc(settingsRef, raffleSettings);
+                    }
+                    updateCountdown();
+                });
+
+                onSnapshot(boletasRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        boletas = data.numbers;
+                    } else {
+                        // Initialize boletas 00-99
+                        boletas = Array.from({ length: 100 }, (_, i) => ({
+                            numero: i.toString().padStart(2, '0'),
+                            estado: 'vacio',
+                            nombre: '',
+                            telefono: ''
+                        }));
+                        setDoc(boletasRef, { numbers: boletas });
+                    }
+                    renderGrid('landing');
+                });
+
+            } catch (e) {
+                console.error("Error initializing Firebase: ", e);
+                showMessageModal('Error', 'No se pudo conectar a la base de datos. Intente recargar la página.');
+            }
+        }
+        
+        // UI Functions
+        function renderGrid(page) {
+            const gridContainer = page === 'landing' ? document.getElementById('lotteryGrid') : document.getElementById('adminLotteryGrid');
+            gridContainer.innerHTML = '';
+            boletas.forEach(boleta => {
+                const boletaDiv = document.createElement('div');
+                boletaDiv.className = `boleta ${boleta.estado} flex items-center justify-center text-center p-2 text-white font-bold rounded-lg transition-all transform hover:scale-105 shadow-md`;
+                
+                let textColor = 'var(--color-text-light)';
+                if (boleta.estado === 'vacio') {
+                    textColor = 'var(--color-vacio-texto)';
+                }
+                
+                boletaDiv.innerHTML = `<span class="boleta-text" style="color:${textColor}">${boleta.numero}</span>`;
+                
+                if (page === 'landing') {
+                    if (boleta.estado === 'vacio') {
+                        boletaDiv.onclick = () => showRequestModal(boleta.numero);
+                    }
+                } else {
+                    boletaDiv.onclick = () => showAdminModal(boleta.numero);
+                }
+                gridContainer.appendChild(boletaDiv);
+            });
+        }
+        
+        function updateRaffleSettingsUI() {
+            document.getElementById('costoInput').value = raffleSettings.costo;
+            document.getElementById('fechaFinalInput').value = raffleSettings.fechaFinal;
+        }
+
+        // Countdown Timer
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const endDate = new Date(raffleSettings.fechaFinal).getTime();
+            const distance = endDate - now;
+
+            if (distance < 0) {
+                document.getElementById('countdown').innerHTML = "La rifa ha finalizado!";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('countdown').innerHTML = `Finaliza en: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+            setTimeout(updateCountdown, 1000);
+        }
+
+        // Request Modal
+        function showRequestModal(number) {
+            selectedBoletaNumber = number;
+            document.getElementById('modalBoletaNumber').innerText = number;
+            const boleta = boletas.find(b => b.numero === number);
+            if (boleta.estado !== 'vacio') {
+                document.getElementById('modalBoletaMessage').innerText = 'Este boleto ya ha sido solicitado.';
+                document.getElementById('solicitanteNombre').disabled = true;
+                document.getElementById('solicitanteWhatsapp').disabled = true;
+                document.querySelector('#requestModal button').disabled = true;
+            } else {
+                 document.getElementById('modalBoletaMessage').innerText = `Costo de la boleta: ${raffleSettings.costo}`;
+                 document.getElementById('solicitanteNombre').disabled = false;
+                 document.getElementById('solicitanteWhatsapp').disabled = false;
+                 document.querySelector('#requestModal button').disabled = false;
+            }
+            document.getElementById('requestModal').style.display = 'flex';
+        }
+
+        function hideRequestModal() {
+            document.getElementById('requestModal').style.display = 'none';
+        }
+
+        async function sendRequest() {
+            const nombre = document.getElementById('solicitanteNombre').value;
+            const telefono = document.getElementById('solicitanteWhatsapp').value;
+
+            if (!nombre || !telefono) {
+                document.getElementById('requestStatus').innerText = 'Por favor, complete todos los campos.';
+                return;
+            }
+
+            const boletaIndex = boletas.findIndex(b => b.numero === selectedBoletaNumber);
+            if (boletaIndex !== -1 && boletas[boletaIndex].estado === 'vacio') {
+                const newBoletas = [...boletas];
+                newBoletas[boletaIndex].estado = 'pendiente';
+                newBoletas[boletaIndex].nombre = nombre;
+                newBoletas[boletaIndex].telefono = telefono;
+
+                try {
+                    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                    const boletasRef = doc(db, `artifacts/${appId}/public/data/raffle_boletas/all_numbers`);
+                    await setDoc(boletasRef, { numbers: newBoletas });
+
+                    document.getElementById('requestStatus').innerText = 'Solicitud enviada. ¡Pronto te contactaremos!';
+                    sendAdminWhatsappNotification(nombre, telefono, selectedBoletaNumber);
+                    
+                    setTimeout(() => {
+                        hideRequestModal();
+                        document.getElementById('requestStatus').innerText = '';
+                    }, 2000);
+
+                } catch (e) {
+                    console.error("Error updating document: ", e);
+                    document.getElementById('requestStatus').innerText = 'Error al enviar la solicitud.';
+                }
+            }
+        }
+        
+        function sendAdminWhatsappNotification(nombre, telefono, numeroBoleta) {
+            const mensaje = `¡Nueva solicitud de boleta! 
+            Hola, me gustaria solicitar la siguiente boleta.
+            
+            Boleta #${numeroBoleta}
+            Nombre: ${nombre}
+            Teléfono: ${telefono}`;
+            
+            const whatsappUrl = `https://wa.me/${adminWhatsappNumber}?text=${encodeURIComponent(mensaje)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Admin View Toggle (Password Protected)
+        function toggleAdminMode() {
+            document.getElementById('passwordModal').style.display = 'flex';
+        }
+        
+        function checkPassword() {
+            const inputPassword = document.getElementById('adminPasswordInput').value;
+            if (inputPassword === adminPassword) {
+                document.getElementById('passwordModal').style.display = 'none';
+                const adminContainer = document.getElementById('adminControlsContainer');
+                const toggleBtn = document.getElementById('toggleAdminBtn');
+                
+                adminContainer.classList.remove('admin-controls');
+                toggleBtn.innerText = 'Ocultar Administración';
+                renderGrid('admin');
+                
+            } else {
+                document.getElementById('passwordError').style.display = 'block';
+            }
+        }
+
+        // Admin Modal
+        function showAdminModal(number) {
+            selectedBoletaNumber = number;
+            const boleta = boletas.find(b => b.numero === number);
+            document.getElementById('adminModalBoletaNumber').innerText = number;
+            document.getElementById('adminNombre').value = boleta.nombre || '';
+            document.getElementById('adminTelefono').value = boleta.telefono || '';
+            document.getElementById('adminMontoPagado').value = boleta.montoPagado || '';
+            document.getElementById('adminMontoTotal').value = raffleSettings.costo;
+            
+            if (boleta.estado === 'pagado') {
+                document.getElementById('sendWhatsappBtn').style.display = 'block';
+            } else {
+                document.getElementById('sendWhatsappBtn').style.display = 'none';
+            }
+
+            document.getElementById('adminModal').style.display = 'flex';
+        }
+
+        function hideAdminModal() {
+            document.getElementById('adminModal').style.display = 'none';
+        }
+        
+        async function changeStatus(status) {
+            const boletaIndex = boletas.findIndex(b => b.numero === selectedBoletaNumber);
+            if (boletaIndex !== -1) {
+                const newBoletas = [...boletas];
+                newBoletas[boletaIndex].estado = status;
+                
+                if (status === 'vacio') {
+                    newBoletas[boletaIndex].nombre = '';
+                    newBoletas[boletaIndex].telefono = '';
+                    newBoletas[boletaIndex].montoPagado = '';
+                } else {
+                    newBoletas[boletaIndex].nombre = document.getElementById('adminNombre').value;
+                    newBoletas[boletaIndex].telefono = document.getElementById('adminTelefono').value;
+                    newBoletas[boletaIndex].montoPagado = document.getElementById('adminMontoPagado').value;
+                }
+                
+                const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const boletasRef = doc(db, `artifacts/${appId}/public/data/raffle_boletas/all_numbers`);
+                await setDoc(boletasRef, { numbers: newBoletas });
+
+                hideAdminModal();
+            }
+        }
+
+        async function deleteBoletaData() {
+            const boletaIndex = boletas.findIndex(b => b.numero === selectedBoletaNumber);
+            if (boletaIndex !== -1) {
+                const newBoletas = [...boletas];
+                newBoletas[boletaIndex] = {
+                    numero: selectedBoletaNumber,
+                    estado: 'vacio',
+                    nombre: '',
+                    telefono: '',
+                    montoPagado: ''
+                };
+                
+                const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const boletasRef = doc(db, `artifacts/${appId}/public/data/raffle_boletas/all_numbers`);
+                await setDoc(boletasRef, { numbers: newBoletas });
+                hideAdminModal();
+            }
+        }
+
+        // Save Settings
+        async function saveRaffleSettings() {
+            const newCosto = document.getElementById('costoInput').value;
+            const newFecha = document.getElementById('fechaFinalInput').value;
+            raffleSettings.costo = newCosto;
+            raffleSettings.fechaFinal = newFecha;
+            
+            const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            const settingsRef = doc(db, `artifacts/${appId}/users/${userId}/raffle_settings/raffle_details`);
+            await setDoc(settingsRef, raffleSettings);
+            showMessageModal('Guardado', 'La configuración de la rifa ha sido actualizada.');
+            updateCountdown();
+        }
+
+        // WhatsApp Functions
+        function createWhatsappMessage() {
+            const boleta = boletas.find(b => b.numero === selectedBoletaNumber);
+            const nombre = boleta.nombre;
+            const numeroBoleta = boleta.numero;
+            const link = window.location.href;
+            const mensaje = `¡Hola, ${nombre}! 🎉 ¡Confirmamos el pago de tu boleta para la rifa *RiffleRAZACampamento2025*! Tu número es el *${numeroBoleta}*. Puedes ver el estado de la rifa en cualquier momento en el siguiente enlace: ${link}`;
+            
+            const whatsappUrl = `https://wa.me/${boleta.telefono}?text=${encodeURIComponent(mensaje)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Image Download
+        document.getElementById('downloadImageBtn').addEventListener('click', () => {
+            html2canvas(document.getElementById('lotteryGrid'), {
+                backgroundColor: null,
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'boletas-disponibles.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        });
+        
+        // Event Listeners
+        window.addEventListener('load', () => {
+            initializeFirebase();
+        });
+        document.getElementById('toggleAdminBtn').addEventListener('click', toggleAdminMode);
+        document.getElementById('submitPasswordBtn').addEventListener('click', checkPassword);
+        document.getElementById('saveChangesBtn').addEventListener('click', saveRaffleSettings);
+        document.getElementById('sendWhatsappBtn').addEventListener('click', createWhatsappMessage);
+        
+    </script>
+</body>
+</html>
